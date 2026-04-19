@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+.DS_Store
+.vscode/
+.idea/
+
+*.log
+
+# Audio / Video (falls keine LFS)
+*.mp3
+*.wav
+*.mp4
