@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BEAT BATTLE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #e8192c;
+    --red-dark: #a0101e;
+    --red-glow: rgba(232,25,44,0.4);
+    --bg: #0a0a0a;
+    --bg2: #111111;
+    --bg3: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #ffffff;
+    --text-dim: #888888;
+    --pixel: 'Press Start 2P', monospace;
+    --mono: 'Share Tech Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--pixel);
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ─── SCANLINES ───────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ─── NOISE OVERLAY ────────────────────────── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* ─── NAVBAR ────────────────────────────────── */
+  #navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    background: rgba(10,10,10,0.95);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+  }
+
+  #navbar .logo-small {
+    font-size: 8px;
+    color: var(--red);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 1px;
+  }
+
+  #navbar .chili-small { font-size: 18px; }
+
+  #navbar .nav-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+
+  #navbar .user-info {
+    color: var(--red);
+    font-size: 7px;
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  #navbar .user-info span { color: var(--text-dim); display: block; }
+
+  .nav-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--pixel);
+    font-size: 7px;
+    padding: 5px 10px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .nav-btn:hover {
+    border-color: var(--red);
+    color: var(--text);
+  }
+
+  /* ─── PAGES ─────────────────────────────────── */
+  .page {
+    display: none;
+    min-height: 100vh;
+    padding-top: 48px;
+  }
+
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ─── LOGIN PAGE ─────────────────────────────── */
+  #page-login {
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, #1a0505 0%, var(--bg) 70%);
+  }
+
+  .login-box {
+    width: 360px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .login-box::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    background: linear-gradient(135deg, var(--red) 0%, transparent 50%);
+    z-index: -1;
+  }
+
+  .login-chili { font-size: 48px; margin-bottom: 20px; display: block; animation: float 3s ease-in-out infinite; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .login-title { font-size: 18px; color: var(--text); margin-bottom: 4px; letter-spacing: 2px; }
+  .login-sub { font-size: 7px; color: var(--text-dim); margin-bottom: 32px; letter-spacing: 1px; }
+
+  .input-group { margin-bottom: 16px; text-align: left; }
+  .input-label { font-size: 7px; color: var(--text-dim); margin-bottom: 6px; display: block; letter-spacing: 1px; }
+
+  .pixel-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .pixel-input:focus { border-color: var(--red); }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--red);
+    border: none;
+    color: var(--text);
+    font-family: var(--pixel);
+    font-size: 9px;
+    padding: 14px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.15s;
+    margin-top: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: translateX(-100%);
+    transition: transform 0.4s;
+  }
+
+  .btn-primary:hover::after { transform: translateX(100%); }
+  .btn-primary:hover { background: #ff1f35; box-shadow: 0 0 20px var(--red-glow); }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--pixel);
+    font-size: 7px;
+    padding: 10px 20px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .btn-secondary:hover { border-color: var(--red); color: var(--text); }
+
+  .login-switch { font-size: 7px; color: var(--text-dim); margin-top: 20px; }
+  .login-switch a { color: var(--red); cursor: pointer; text-decoration: none; }
+  .login-switch a:hover { text-decoration: underline; }
+
+  /* ─── HOME PAGE ─────────────────────────────── */
+  #page-home {
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    position: relative;
+  }
+
+  .home-bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,25,44,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,25,44,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .home-center {
+    text-align: center;
+    z-index: 1;
+    animation: fadeIn 0.6s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .home-chili {
+    font-size: 64px;
+    display: block;
+    margin-bottom: 12px;
+    animation: float 3s ease-in-out infinite;
+    filter: drop-shadow(0 0 20px var(--red-glow));
+  }
+
+  .home-title {
+    font-size: 36px;
+    letter-spacing: 6px;
+    color: var(--text);
+    margin-bottom: 8px;
+    text-shadow: 0 0 30px rgba(232,25,44,0.3);
+  }
+
+  .home-sub {
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    margin-bottom: 48px;
+  }
+
+  .mode-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 32px 48px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .mode-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--red);
+  }
+
+  .mode-label {
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .mode-btns {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+
+  .mode-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--pixel);
+    font-size: 10px;
+    padding: 16px 32px;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mode-btn:hover {
+    border-color: var(--red);
+    background: rgba(232,25,44,0.1);
+    box-shadow: 0 0 20px var(--red-glow), inset 0 0 20px rgba(232,25,44,0.05);
+    color: var(--text);
+  }
+
+  .mode-btn.active {
+    background: var(--red);
+    border-color: var(--red);
+    box-shadow: 0 0 30px var(--red-glow);
+  }
+
+  /* ─── SOLO COOK PAGE ─────────────────────────── */
+  #page-solo {
+    padding: 68px 20px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+    align-self: center;
+  }
+
+  .section-header {
+    font-size: 20px;
+    letter-spacing: 4px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .section-sub {
+    font-size: 7px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 28px;
+  }
+
+  .spice-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+  }
+
+  .spice-label {
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+
+  .spice-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+
+  .spice-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: var(--text);
+    cursor: pointer;
+    border: 2px solid var(--red);
+  }
+
+  .spice-val {
+    font-size: 10px;
+    color: var(--text);
+    width: 30px;
+    text-align: right;
+    font-family: var(--mono);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .kit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .kit-cell {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.15s;
+    overflow: hidden;
+  }
+
+  .kit-cell:hover { border-color: var(--red); }
+
+  .kit-cell.playing {
+    border-color: var(--red);
+    box-shadow: 0 0 15px var(--red-glow);
+  }
+
+  .kit-cell .cell-name {
+    font-size: 7px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .kit-cell .cell-num {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 7px;
+    color: var(--border);
+  }
+
+  .kit-cell .play-icon {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 8px;
+    color: var(--text-dim);
+  }
+
+  .waveform-canvas {
+    width: 100%;
+    height: 48px;
+    display: block;
+  }
+
+  /* ─── LOBBY PAGE ─────────────────────────────── */
+  #page-lobby {
+    padding: 68px 20px 20px;
+    max-width: 700px;
+    margin: 0 auto;
+    width: 100%;
+    align-self: center;
+  }
+
+  .lobby-code {
+    font-size: 28px;
+    color: var(--red);
+    letter-spacing: 6px;
+    margin-bottom: 4px;
+  }
+
+  .lobby-meta {
+    font-size: 7px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-bottom: 28px;
+  }
+
+  .lobby-meta span { color: var(--text); }
+
+  .players-list {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .player-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+
+  .player-row:last-child { border-bottom: none; }
+
+  .player-name { color: var(--text); }
+  .player-tag { font-size: 6px; color: var(--text-dim); margin-left: 8px; }
+
+  .player-status {
+    font-size: 7px;
+    letter-spacing: 1px;
+  }
+
+  .status-ready { color: #22cc55; }
+  .status-waiting { color: var(--text-dim); }
+  .status-host { color: var(--red); }
+
+  .host-controls {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .host-ctrl-label {
+    font-size: 7px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+  }
+
+  .pixel-select {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--pixel);
+    font-size: 8px;
+    padding: 10px 14px;
+    outline: none;
+    cursor: pointer;
+    width: 200px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+
+  .lobby-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  /* ─── COOK TIMER PAGE ────────────────────────── */
+  #page-cook {
+    align-items: center;
+    justify-content: center;
+    padding: 68px 20px 20px;
+  }
+
+  .cook-container {
+    text-align: center;
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .cook-section-title {
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .timer-display {
+    font-size: 80px;
+    color: var(--text);
+    letter-spacing: 8px;
+    font-family: var(--pixel);
+    margin-bottom: 8px;
+    text-shadow: 0 0 40px rgba(255,255,255,0.2);
+    transition: color 0.3s;
+    line-height: 1;
+  }
+
+  .timer-display.urgent {
+    color: var(--red);
+    animation: urgentPulse 0.5s ease-in-out infinite;
+    text-shadow: 0 0 40px var(--red-glow);
+  }
+
+  @keyframes urgentPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+
+  .cook-hint {
+    font-size: 7px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 32px;
+  }
+
+  .cook-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .kit-grid-cook {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    text-align: left;
+  }
+
+  /* ─── NOW PLAYING ────────────────────────────── */
+  #page-voting {
+    align-items: center;
+    justify-content: center;
+    padding: 68px 20px 20px;
+    background: var(--bg);
+  }
+
+  .voting-container {
+    width: 100%;
+    max-width: 700px;
+    text-align: center;
+  }
+
+  .now-playing-label {
+    font-size: 12px;
+    letter-spacing: 4px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .beat-player-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .beat-player-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    animation: scanLine 2s linear infinite;
+  }
+
+  @keyframes scanLine {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .beat-producer {
+    font-size: 10px;
+    color: var(--red);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+  }
+
+  .main-waveform {
+    width: 100%;
+    height: 80px;
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .beat-progress {
+    font-size: 7px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .vote-section {
+    margin-top: 24px;
+  }
+
+  .vote-label {
+    font-size: 8px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  .vote-btns {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .vote-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--pixel);
+    font-size: 8px;
+    padding: 14px 28px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .vote-btn:hover { border-color: var(--red); color: var(--red); }
+  .vote-btn.voted { background: var(--red); border-color: var(--red); }
+
+  /* ─── RESULTS PAGE ───────────────────────────── */
+  #page-results {
+    align-items: center;
+    justify-content: center;
+    padding: 68px 20px 20px;
+  }
+
+  .results-container {
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+  }
+
+  .results-title {
+    font-size: 20px;
+    letter-spacing: 4px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .results-sub {
+    font-size: 7px;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+    letter-spacing: 2px;
+  }
+
+  .podium {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .podium-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .podium-rank {
+    font-size: 7px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .podium-name {
+    font-size: 8px;
+    color: var(--text);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .podium-votes {
+    font-size: 7px;
+    color: var(--text-dim);
+  }
+
+  .podium-bar {
+    width: 100px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 12px;
+  }
+
+  .podium-bar.first {
+    height: 160px;
+    border-color: #ffd700;
+    box-shadow: 0 0 20px rgba(255,215,0,0.2);
+  }
+
+  .podium-bar.second {
+    height: 120px;
+    border-color: #888;
+  }
+
+  .podium-bar.third {
+    height: 90px;
+    border-color: #a0522d;
+  }
+
+  .podium-trophy { font-size: 24px; }
+
+  .results-list {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .result-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 8px;
+  }
+
+  .result-row:last-child { border-bottom: none; }
+
+  .result-pos { color: var(--text-dim); width: 30px; }
+  .result-name { flex: 1; text-align: left; margin-left: 12px; }
+  .result-votes { color: var(--red); font-family: var(--mono); font-size: 11px; }
+
+  /* ─── LEADERBOARD PAGE ───────────────────────── */
+  #page-leaderboard {
+    padding: 68px 20px 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+    align-self: center;
+  }
+
+  .lb-table {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-collapse: collapse;
+  }
+
+  .lb-table th {
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+  }
+
+  .lb-table td {
+    font-size: 8px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(42,42,42,0.5);
+    font-family: var(--mono);
+  }
+
+  .lb-table tr:last-child td { border-bottom: none; }
+
+  .lb-table tr:hover td { background: rgba(232,25,44,0.05); }
+
+  .lb-rank-1 td:first-child { color: #ffd700; font-family: var(--pixel); }
+  .lb-rank-2 td:first-child { color: #aaa; font-family: var(--pixel); }
+  .lb-rank-3 td:first-child { color: #a0522d; font-family: var(--pixel); }
+
+  .lb-wins { color: var(--red); font-size: 11px; }
+  .lb-name { color: var(--text); font-size: 10px; }
+  .lb-games { color: var(--text-dim); }
+  .lb-wr { color: #22cc55; }
+
+  .lb-you { background: rgba(232,25,44,0.08) !important; }
+  .lb-you td { border-color: rgba(232,25,44,0.3) !important; }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .filter-btn {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--pixel);
+    font-size: 7px;
+    padding: 8px 14px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active { border-color: var(--red); color: var(--red); }
+  .filter-btn:hover { border-color: var(--red); color: var(--text); }
+
+  /* ─── MULTIPLAYER HOME ───────────────────────── */
+  #page-multi {
+    align-items: center;
+    justify-content: center;
+    padding: 68px 20px 20px;
+  }
+
+  .multi-container {
+    width: 100%;
+    max-width: 460px;
+    text-align: center;
+  }
+
+  .multi-title {
+    font-size: 16px;
+    letter-spacing: 4px;
+    margin-bottom: 32px;
+    color: var(--text);
+  }
+
+  .multi-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .multi-option {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 28px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .multi-option::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--red);
+    transform: scaleY(0);
+    transition: transform 0.2s;
+  }
+
+  .multi-option:hover::before { transform: scaleY(1); }
+  .multi-option:hover { border-color: var(--red); transform: translateX(4px); }
+
+  .multi-opt-title {
+    font-size: 11px;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .multi-opt-desc {
+    font-size: 7px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    line-height: 1.8;
+    font-family: var(--mono);
+  }
+
+  .join-input-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  /* ─── TOASTS ─────────────────────────────────── */
+  #toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--pixel);
+    font-size: 7px;
+    padding: 12px 20px;
+    letter-spacing: 1px;
+    animation: slideIn 0.3s ease, fadeOut 0.4s ease 2.6s forwards;
+    border-left: 3px solid var(--red);
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes fadeOut {
+    to { opacity: 0; transform: translateX(40px); }
+  }
+
+  /* ─── PROGRESS BAR ───────────────────────────── */
+  .progress-bar-wrap {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    margin-top: 12px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--red);
+    transition: width 0.1s linear;
+  }
+
+  /* ─── UTILS ─────────────────────────────────── */
+  .mt8 { margin-top: 8px; }
+  .mt16 { margin-top: 16px; }
+  .mt24 { margin-top: 24px; }
+  .mb8 { margin-bottom: 8px; }
+  .mb16 { margin-bottom: 16px; }
+
+  .red { color: var(--red); }
+  .dim { color: var(--text-dim); }
+
+  .flex-row { display: flex; gap: 12px; align-items: center; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+
+  /* ─── WAVEFORM ANIMATION ─────────────────────── */
+  @keyframes waveAnim {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* ─── LOADING SCREEN ─────────────────────────── */
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9997;
+    transition: opacity 0.5s ease;
+  }
+
+  #loading.hidden { opacity: 0; pointer-events: none; }
+
+  .loading-chili { font-size: 48px; animation: float 1s ease-in-out infinite; margin-bottom: 20px; }
+
+  .loading-text {
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .loading-bar {
+    width: 200px;
+    height: 3px;
+    background: var(--border);
+    overflow: hidden;
+  }
+
+  .loading-bar-fill {
+    height: 100%;
+    background: var(--red);
+    animation: loadFill 1.5s ease-out forwards;
+  }
+
+  @keyframes loadFill {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+
+  /* ─── RESPONSIVE ─────────────────────────────── */
+  @media (max-width: 600px) {
+    .home-title { font-size: 22px; }
+    .kit-grid { grid-template-columns: repeat(2, 1fr); }
+    .kit-grid-cook { grid-template-columns: repeat(2, 1fr); }
+    .timer-display { font-size: 48px; }
+    .mode-btns { flex-direction: column; }
+  }
+
+  /* ─── STARS BG ───────────────────────────────── */
+  .stars-bg {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .star {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    background: rgba(255,255,255,0.3);
+    animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.8; }
+  }
+
+  /* ─── MULTIPLAYER WAITING ────────────────────── */
+  .waiting-pulse {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* ─── MOBILE JOIN CODE INPUT ─────────────────── */
+  .code-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--pixel);
+    font-size: 16px;
+    padding: 14px 16px;
+    outline: none;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    width: 100%;
+    text-align: center;
+  }
+
+  .code-input:focus { border-color: var(--red); }
+
+  /* ─── AUDIO VISUALIZER BARS ──────────────────── */
+  .audio-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 3px;
+    height: 40px;
+    margin: 12px 0;
+  }
+
+  .audio-bar {
+    width: 4px;
+    background: var(--red);
+    min-height: 4px;
+    transition: height 0.1s;
+    animation: barBounce var(--speed, 0.8s) ease-in-out infinite alternate var(--del, 0s);
+  }
+
+  @keyframes barBounce {
+    from { height: var(--min-h, 4px); }
+    to { height: var(--max-h, 32px); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading">
+  <span class="loading-chili">🌶️</span>
+  <div class="loading-text">LOADING BEAT BATTLE...</div>
+  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+</div>
+
+<!-- STARS BG -->
+<div class="stars-bg" id="stars"></div>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <div class="logo-small">
+    <span class="chili-small">🌶️</span>
+    <span>BEAT BATTLE</span>
+  </div>
+  <div class="nav-right">
+    <div class="user-info" id="nav-user-info" style="display:none;">
+      <strong id="nav-username">PLAYER</strong>
+      <span id="nav-wins">0 WINS</span>
+    </div>
+    <button class="nav-btn" id="nav-lb-btn" onclick="showPage('leaderboard')" style="display:none;">LEADERBOARD</button>
+    <button class="nav-btn" id="nav-logout-btn" onclick="logout()" style="display:none;">LOGOUT</button>
+  </div>
+</nav>
+
+<!-- TOAST CONTAINER -->
+<div id="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: LOGIN -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page active" id="page-login">
+  <div class="login-box">
+    <span class="login-chili">🌶️</span>
+    <div class="login-title">BEAT BATTLE</div>
+    <div class="login-sub">THE PRODUCER ARENA</div>
+
+    <div id="login-form">
+      <div class="input-group">
+        <label class="input-label">USERNAME</label>
+        <input class="pixel-input" id="login-user" placeholder="your producer tag" maxlength="20" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">PASSWORD</label>
+        <input class="pixel-input" id="login-pass" type="password" placeholder="••••••••" />
+      </div>
+      <button class="btn-primary" onclick="doLogin()">▶ LOGIN</button>
+      <div class="login-switch mt8">
+        no account? <a onclick="showRegister()">register here</a>
+      </div>
+    </div>
+
+    <div id="register-form" style="display:none;">
+      <div class="input-group">
+        <label class="input-label">USERNAME</label>
+        <input class="pixel-input" id="reg-user" placeholder="choose your producer tag" maxlength="20" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">PASSWORD</label>
+        <input class="pixel-input" id="reg-pass" type="password" placeholder="••••••••" />
+      </div>
+      <div class="input-group">
+        <label class="input-label">CONFIRM PASSWORD</label>
+        <input class="pixel-input" id="reg-pass2" type="password" placeholder="••••••••" />
+      </div>
+      <button class="btn-primary" onclick="doRegister()">▶ CREATE ACCOUNT</button>
+      <div class="login-switch mt8">
+        have an account? <a onclick="showLogin()">login here</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: HOME -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-home">
+  <div class="home-bg-grid"></div>
+  <div class="home-center">
+    <span class="home-chili">🌶️</span>
+    <div class="home-title">BEAT BATTLE</div>
+    <div class="home-sub">CHOOSE YOUR MODE</div>
+
+    <div class="mode-box">
+      <div class="mode-label">SELECT MODE</div>
+      <div class="mode-btns">
+        <button class="mode-btn" onclick="showPage('solo')">SOLO</button>
+        <button class="mode-btn" onclick="showPage('multi')">MULTIPLAYER</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: SOLO COOK -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-solo">
+  <div class="section-header">SOLO COOK</div>
+  <div class="section-sub">GENERATE YOUR BATTLE KIT</div>
+
+  <div class="spice-row">
+    <span class="spice-label">🌶️ SPICE</span>
+    <input type="range" class="spice-slider" id="spice-slider" min="0" max="1" step="0.1" value="0.5" oninput="updateSpice(this)">
+    <span class="spice-val" id="spice-val">0.5</span>
+  </div>
+
+  <div class="action-row">
+    <button class="btn-primary" style="flex:1;" onclick="regenerateSoloKit()">◈ REGENERATE BATTLE KIT</button>
+    <button class="btn-secondary" onclick="downloadAllSolo()">⬇ DOWNLOAD ALL</button>
+    <button class="btn-secondary" onclick="showPage('home')">← BACK</button>
+  </div>
+
+  <div class="kit-grid" id="solo-kit-grid">
+    <!-- Filled by JS -->
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: MULTIPLAYER MENU -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-multi">
+  <div class="multi-container">
+    <div class="multi-title">MULTIPLAYER</div>
+
+    <div class="multi-options">
+      <div class="multi-option" onclick="createLobby()">
+        <div class="multi-opt-title">CREATE LOBBY</div>
+        <div class="multi-opt-desc">Host a private battle room<br>Share the code with producers</div>
+      </div>
+
+      <div class="multi-option">
+        <div class="multi-opt-title">JOIN LOBBY</div>
+        <div class="multi-opt-desc">Enter the battle code below</div>
+        <div class="join-input-row mt16">
+          <input class="code-input" id="join-code-input" placeholder="CODE" maxlength="6" oninput="this.value=this.value.toUpperCase()" />
+          <button class="btn-primary" style="white-space:nowrap;padding:14px 20px;font-size:8px;" onclick="joinLobby()">JOIN ▶</button>
+        </div>
+      </div>
+
+      <button class="btn-secondary" onclick="showPage('home')" style="width:100%;padding:14px;">← BACK TO MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: LOBBY -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-lobby">
+  <div class="flex-between mb16">
+    <div>
+      <div style="font-size:8px;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;">LOBBY</div>
+      <div class="lobby-code" id="lobby-code-display">------</div>
+    </div>
+    <button class="btn-secondary" onclick="copyLobbyCode()">📋 COPY CODE</button>
+  </div>
+
+  <div class="lobby-meta" id="lobby-meta">
+    SPICE <span id="lm-spice">0.5</span> · PUBLIC · MIN <span id="lm-min">2</span> PLAYERS · ALL READY · COOK <span id="lm-time">10</span> MIN
+  </div>
+
+  <div class="players-list" id="lobby-players-list">
+    <!-- Filled by JS -->
+  </div>
+
+  <div class="host-controls" id="host-controls" style="display:none;">
+    <div class="host-ctrl-label">COOK TIME (HOST)</div>
+    <select class="pixel-select" id="cook-time-select" onchange="updateCookTime(this.value)">
+      <option value="5">5 MIN</option>
+      <option value="10" selected>10 MIN</option>
+      <option value="15">15 MIN</option>
+      <option value="20">20 MIN</option>
+      <option value="30">30 MIN</option>
+    </select>
+  </div>
+
+  <div class="lobby-actions mt16">
+    <button class="btn-secondary" onclick="leaveLobby()" style="flex:1;">✕ LEAVE LOBBY</button>
+  </div>
+
+  <div style="font-size:7px;color:var(--text-dim);letter-spacing:1px;margin-top:20px;">
+    <span class="waiting-pulse"></span>&nbsp; GAME STARTS AUTOMATICALLY WHEN 2 PLAYERS JOIN...
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: COOK TIMER -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-cook">
+  <div class="cook-container">
+    <div class="cook-section-title">COOK TIMER</div>
+    <div class="timer-display" id="timer-display">10:00</div>
+    <div class="cook-hint">HEAD TO YOUR DAW — kit is below. Download before time ends.</div>
+
+    <div class="cook-actions">
+      <button class="btn-primary" onclick="downloadKit()">⬇ DOWNLOAD KIT (ZIP)</button>
+      <button class="btn-secondary" onclick="finishCook()">✓ FINISHED</button>
+    </div>
+
+    <div class="kit-grid-cook" id="cook-kit-grid">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: VOTING / NOW PLAYING -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-voting">
+  <div class="voting-container">
+    <div class="now-playing-label">NOW PLAYING</div>
+
+    <div class="beat-player-box">
+      <div class="beat-producer" id="voting-producer">PLAYER — BEAT</div>
+      <canvas class="main-waveform" id="voting-waveform" width="640" height="80"></canvas>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="vote-progress" style="width:0%"></div>
+      </div>
+      <div class="beat-progress mt8" id="vote-beat-count">1 / 2</div>
+    </div>
+
+    <div class="audio-bars" id="audio-bars">
+      <!-- Filled by JS -->
+    </div>
+
+    <div class="vote-section">
+      <div class="vote-label">CAST YOUR VOTE</div>
+      <div class="vote-btns" id="vote-btns">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+
+    <div id="next-beat-row" style="margin-top:20px;display:none;">
+      <button class="btn-primary" onclick="nextVotingBeat()">▶ NEXT BEAT</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: RESULTS -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-results">
+  <div class="results-container">
+    <div class="results-title">BATTLE RESULTS</div>
+    <div class="results-sub">THE CROWD HAS SPOKEN</div>
+
+    <div class="podium" id="results-podium">
+      <!-- Filled by JS -->
+    </div>
+
+    <div class="results-list" id="results-list">
+      <!-- Filled by JS -->
+    </div>
+
+    <div class="flex-row" style="justify-content:center;gap:12px;flex-wrap:wrap;">
+      <button class="btn-primary" onclick="playAgain()">▶ PLAY AGAIN</button>
+      <button class="btn-secondary" onclick="showPage('leaderboard')">🏆 LEADERBOARD</button>
+      <button class="btn-secondary" onclick="showPage('home')">← MENU</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PAGE: LEADERBOARD -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-leaderboard">
+  <div class="flex-between mb8">
+    <div>
+      <div class="section-header">LEADERBOARD</div>
+      <div class="section-sub">TOP PRODUCERS WORLDWIDE</div>
+    </div>
+    <button class="btn-secondary" onclick="showPage('home')">← BACK</button>
+  </div>
+
+  <div class="filter-row">
+    <button class="filter-btn active" onclick="filterLB(this,'all')">ALL TIME</button>
+    <button class="filter-btn" onclick="filterLB(this,'week')">THIS WEEK</button>
+    <button class="filter-btn" onclick="filterLB(this,'month')">THIS MONTH</button>
+  </div>
+
+  <table class="lb-table" id="lb-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>PRODUCER</th>
+        <th>WINS</th>
+        <th>GAMES</th>
+        <th>WIN RATE</th>
+        <th>STREAK</th>
+      </tr>
+    </thead>
+    <tbody id="lb-body">
+    </tbody>
+  </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="samples-db.js"></script>
+<script>
+// ─── STATE ─────────────────────────────────────────────────
+const state = {
+  currentPage: 'login',
+  user: null,
+  guestName: 'GUEST_' + Math.floor(Math.random() * 9000 + 1000),
+  lobbyCode: null,
+  isHost: false,
+  isReady: false,
+  cookTimeMin: 10,
+  cookTimerInterval: null,
+  cookTimeLeft: 0,
+  spice: 0.5,
+  soloKit: [],
+  cookKit: [],
+  votingBeats: [],
+  currentVotingIdx: 0,
+  votes: {},
+  myVote: null,
+  votingAnimFrame: null,
+  votingProgress: 0,
+  progressInterval: null,
+};
+
+// ─── SAMPLE PLAYERS DB (localStorage-based) ────────────────
+let players = JSON.parse(localStorage.getItem('bb_players') || '{}');
+
+const KIT_SLOTS = ['SNARE','CLAP','HIHAT','OPEN HAT','808','PERC','FX','VOX','SYNTH1','SYNTH2','SYNTH3'];
+
+// ─── STARS ─────────────────────────────────────────────────
+(function createStars() {
+  const c = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s`;
+    c.appendChild(s);
+  }
+})();
+
+// ─── AUDIO BARS ─────────────────────────────────────────────
+function buildAudioBars() {
+  const c = document.getElementById('audio-bars');
+  c.innerHTML = '';
+  for (let i = 0; i < 24; i++) {
+    const b = document.createElement('div');
+    b.className = 'audio-bar';
+    const minH = 4 + Math.random() * 8;
+    const maxH = 16 + Math.random() * 24;
+    const spd = (0.4 + Math.random() * 0.8).toFixed(2);
+    const del = (Math.random() * 0.6).toFixed(2);
+    b.style.cssText = `--min-h:${minH}px;--max-h:${maxH}px;--speed:${spd}s;--del:${del}s;height:${minH}px`;
+    c.appendChild(b);
+  }
+}
+
+// ─── PAGE NAVIGATION ────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  state.currentPage = name;
+
+  if (name === 'solo') renderSoloKit();
+  if (name === 'leaderboard') renderLeaderboard();
+  if (name === 'voting') { buildAudioBars(); startVotingProgress(); }
+}
+
+// ─── LOADING ────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const l = document.getElementById('loading');
+    l.classList.add('hidden');
+    setTimeout(() => l.style.display = 'none', 500);
+
+    const saved = localStorage.getItem('bb_session');
+    if (saved) {
+      state.user = JSON.parse(saved);
+      afterLogin();
+    }
+  }, 1800);
+});
+
+// ─── AUTH ────────────────────────────────────────────────────
+function showRegister() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('register-form').style.display = 'block';
+}
+
+function showLogin() {
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('login-form').style.display = 'block';
+}
+
+function doLogin() {
+  const u = document.getElementById('login-user').value.trim().toUpperCase();
+  const p = document.getElementById('login-pass').value;
+  if (!u || !p) { toast('ENTER YOUR CREDENTIALS'); return; }
+
+  if (players[u]) {
+    if (players[u].password !== p) { toast('WRONG PASSWORD — TRY AGAIN'); return; }
+    state.user = players[u];
+  } else {
+    // Auto-create account on login
+    players[u] = { name: u, password: p, wins: 0, games: 0, streak: 0 };
+    players = { ...players };
+    localStorage.setItem('bb_players', JSON.stringify(players));
+    state.user = players[u];
+  }
+  localStorage.setItem('bb_session', JSON.stringify(state.user));
+  afterLogin();
+}
+
+function doRegister() {
+  const u = document.getElementById('reg-user').value.trim().toUpperCase();
+  const p = document.getElementById('reg-pass').value;
+  const p2 = document.getElementById('reg-pass2').value;
+
+  if (!u || u.length < 2) { toast('USERNAME TOO SHORT'); return; }
+  if (p.length < 4) { toast('PASSWORD TOO SHORT (MIN 4)'); return; }
+  if (p !== p2) { toast('PASSWORDS DO NOT MATCH'); return; }
+  if (players[u]) { toast('USERNAME TAKEN — PICK ANOTHER'); return; }
+
+  players[u] = { name: u, password: p, wins: 0, games: 0, streak: 0 };
+  localStorage.setItem('bb_players', JSON.stringify(players));
+  state.user = players[u];
+  localStorage.setItem('bb_session', JSON.stringify(state.user));
+  toast('ACCOUNT CREATED — WELCOME, ' + u + ' 🌶️');
+  afterLogin();
+}
+
+function afterLogin() {
+  const ui = document.getElementById('nav-user-info');
+  const lb = document.getElementById('nav-lb-btn');
+  const lo = document.getElementById('nav-logout-btn');
+  ui.style.display = 'block';
+  lb.style.display = 'block';
+  lo.style.display = 'block';
+  document.getElementById('nav-username').textContent = state.user.name;
+  document.getElementById('nav-wins').textContent = (state.user.wins || 0) + ' WINS';
+  showPage('home');
+}
+
+function logout() {
+  localStorage.removeItem('bb_session');
+  state.user = null;
+  ['nav-user-info','nav-lb-btn','nav-logout-btn'].forEach(id =>
+    document.getElementById(id).style.display = 'none'
+  );
+  showPage('login');
+}
+
+// ─── WAVEFORM CANVAS DRAWING ─────────────────────────────────
+function drawWaveform(canvas, spice = 0.5, active = false, color = null) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const c = color || (active ? '#e8192c' : '#e8192c');
+  const segments = Math.floor(W / 2);
+
+  ctx.fillStyle = c;
+
+  for (let i = 0; i < segments; i++) {
+    const x = i * 2;
+    const base = 0.1 + Math.random() * 0.2;
+    const spikeChance = spice;
+    const h = (base + (Math.random() < spikeChance ? Math.random() * 0.7 : 0)) * H * 0.9;
+    const y = (H - h) / 2;
+    ctx.fillRect(x, y, 1, h);
+  }
+}
+
+function drawAnimatedWaveform(canvas, progress) {
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  const segments = Math.floor(W / 2);
+  const played = Math.floor(segments * progress);
+
+  for (let i = 0; i < segments; i++) {
+    const x = i * 2;
+    const seed = Math.sin(i * 0.3) * 0.5 + Math.sin(i * 0.7) * 0.3 + Math.sin(i * 1.3) * 0.2;
+    const h = (0.2 + Math.abs(seed) * 0.6) * H * 0.85;
+    const y = (H - h) / 2;
+    ctx.fillStyle = i < played ? '#e8192c' : '#3a3a3a';
+    ctx.fillRect(x, y, 1, h);
+  }
+}
+
+// ─── SOLO KIT ────────────────────────────────────────────────
+function getRandomSample(slotName) {
+  let category = slotName;
+  if (slotName.startsWith('SYNTH')) category = 'SYNTH';
+  const list = SAMPLES_DB[category] || [];
+  if (!list.length) return null;
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function regenerateSoloKit() {
+  state.soloKit = KIT_SLOTS.map(name => ({ 
+    name, 
+    sample: getRandomSample(name),
+    waveData: Math.random() 
+  }));
+  renderSoloKit();
+  toast('NEW KIT GENERATED 🌶️');
+}
+
+function renderSoloKit() {
+  if (!state.soloKit.length) regenerateSoloKit();
+  const grid = document.getElementById('solo-kit-grid');
+  grid.innerHTML = '';
+  state.soloKit.forEach((slot, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'kit-cell';
+    cell.id = 'solo-cell-' + i;
+    cell.innerHTML = `
+      <div class="cell-name">${slot.name} ${slot.sample ? '<span style="color:var(--red);opacity:0.6;">SAMPLED</span>' : ''}</div>
+      <div class="cell-num">${i + 1}</div>
+      <canvas class="waveform-canvas" id="wf-solo-${i}" width="200" height="48"></canvas>
+      <div class="play-icon" onclick="playCellSound(${i},'solo')">▶</div>
+    `;
+    cell.onclick = () => playCellSound(i, 'solo');
+    grid.appendChild(cell);
+    setTimeout(() => {
+      const c = document.getElementById('wf-solo-' + i);
+      if (c) drawWaveform(c, state.spice);
+    }, 50);
+  });
+}
+
+function updateSpice(el) {
+  state.spice = parseFloat(el.value);
+  document.getElementById('spice-val').textContent = state.spice.toFixed(1);
+}
+
+function playCellSound(idx, mode) {
+  const kit = mode === 'solo' ? state.soloKit : state.cookKit;
+  const slot = kit[idx];
+  const prefix = mode === 'solo' ? 'solo-cell-' : 'cook-cell-';
+  
+  document.querySelectorAll('.kit-cell').forEach(c => c.classList.remove('playing'));
+  const cell = document.getElementById(prefix + idx);
+  if (cell) cell.classList.add('playing');
+  
+  if (slot && slot.sample) {
+    playSample(slot.sample);
+  } else {
+    playBeepSound(idx);
+  }
+  
+  setTimeout(() => { if (cell) cell.classList.remove('playing'); }, 800);
+}
+
+const sampleCache = {};
+function playSample(url) {
+  try {
+    if (sampleCache[url]) {
+      sampleCache[url].currentTime = 0;
+      sampleCache[url].play();
+      return;
+    }
+    const audio = new Audio(url);
+    sampleCache[url] = audio;
+    audio.play();
+  } catch(e) {
+    console.error("Error playing sample:", e);
+  }
+}
+
+async function downloadKitAsZip(kit, fileName) {
+  if (typeof JSZip === 'undefined') {
+    toast('✕ JSZip NOT LOADED - CHECK INTERNET');
+    return;
+  }
+  if (!kit || kit.length === 0) {
+    toast('NO KIT TO DOWNLOAD');
+    return;
+  }
+
+  const zip = new JSZip();
+  const folder = zip.folder("BattleKit");
+  
+  toast('⌛ PREPARING ZIP...');
+  console.log("Starting ZIP creation for:", fileName);
+
+  try {
+    const promises = kit.map(async (slot) => {
+      if (slot.sample) {
+        try {
+          console.log("Fetching sample:", slot.sample);
+          const response = await fetch(slot.sample);
+          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+          const blob = await response.blob();
+          const sampleFileName = slot.sample.split('/').pop();
+          folder.file(`${slot.name}_${sampleFileName}`, blob);
+        } catch (e) {
+          console.error(`Failed to fetch ${slot.sample}:`, e);
+          if (location.protocol === 'file:') {
+            toast('✕ CORS ERROR: USE A LOCAL SERVER (e.g. Live Server)');
+          }
+        }
+      }
+    });
+
+    await Promise.all(promises);
+
+    console.log("Generating ZIP blob...");
+    const content = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(content);
+    link.download = fileName || "BeatBattle_Kit.zip";
+    document.body.appendChild(link); // Append to body for better compatibility
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+    }, 100);
+    
+    toast('✓ KIT DOWNLOADED SUCCESSFULLY');
+  } catch (err) {
+    console.error("Zip generation error:", err);
+    toast('✕ ERROR CREATING ZIP - CHECK CONSOLE');
+  }
+}
+
+function downloadAllSolo() {
+  const name = state.user ? state.user.name : 'GUEST';
+  downloadKitAsZip(state.soloKit, `SOLO_KIT_${name}.zip`);
+}
+
+// ─── AUDIO SYNTH ─────────────────────────────────────────────
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playBeepSound(idx) {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    const freqs = [80, 200, 6000, 8000, 40, 400, 1000, 300, 600, 400, 800];
+    const types = ['sine','triangle','sawtooth','square','sine','triangle','sawtooth','sine','triangle','sawtooth','sine'];
+
+    osc.type = types[idx % types.length];
+    osc.frequency.setValueAtTime(freqs[idx % freqs.length], ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freqs[idx % freqs.length] * 0.3, ctx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+
+    osc.start();
+    osc.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
+function playTickSound() {
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1200, ctx.currentTime);
+    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.05);
+  } catch(e) {}
+}
+
+// ─── MULTIPLAYER SYNC (BroadcastChannel) ──────────────────────
+const multiChannel = new BroadcastChannel('beat_battle_multi');
+const lobbyState = {
+  players: [],
+  spice: 0.5,
+  cookTime: 10,
+  active: false,
+};
+
+multiChannel.onmessage = (e) => {
+  const { type, data } = e.data;
+  console.log('Multi Message:', type, data);
+
+  if (type === 'LOBBY_QUERY') {
+    if (state.lobbyCode && state.isHost) {
+      multiChannel.postMessage({ type: 'LOBBY_INFO', data: {
+        code: state.lobbyCode,
+        spice: state.spice,
+        cookTime: state.cookTimeMin,
+        players: lobbyState.players
+      }});
+    }
+  }
+
+  if (type === 'LOBBY_INFO') {
+    if (!state.isHost && state.lobbyCode === data.code) {
+      state.spice = data.spice;
+      state.cookTimeMin = data.cookTime;
+      lobbyState.players = data.players;
+      renderLobbyPlayers();
+      updateLobbyMeta();
+    }
+  }
+
+  if (type === 'PLAYER_JOINED') {
+    if (data.code === state.lobbyCode) {
+      if (!lobbyState.players.find(p => p.name === data.user.name)) {
+        lobbyState.players.push({ ...data.user, ready: true }); // Auto-ready
+        renderLobbyPlayers();
+        toast('🔔 ' + data.user.name + ' JOINED THE LOBBY');
+        if (state.isHost) {
+          syncLobby();
+          if (lobbyState.players.length >= 2) {
+            setTimeout(() => {
+              toast('2 PLAYERS DETECTED — STARTING BATTLE!');
+              multiChannel.postMessage({ type: 'START_COOK', data: { code: state.lobbyCode } });
+              startCookPhase();
+            }, 1500);
+          }
+        }
+      }
+    }
+  }
+
+  if (type === 'PLAYER_READY') {
+    // Legacy support or ignored as game starts automatically
+  }
+
+  if (type === 'START_COOK') {
+    if (data.code === state.lobbyCode && !state.isHost) {
+      startCookPhase();
+    }
+  }
+
+  if (type === 'FINISH_COOK') {
+    if (data.code === state.lobbyCode) {
+      toast('✓ ' + data.name + ' FINISHED COOKING');
+      // If all finished, could auto-start voting
+    }
+  }
+
+  if (type === 'VOTE_CAST') {
+    if (data.code === state.lobbyCode) {
+      state.votes[data.target] = (state.votes[data.target] || 0) + 1;
+    }
+  }
+
+  if (type === 'PLAYER_LEFT') {
+    if (data.code === state.lobbyCode) {
+      lobbyState.players = lobbyState.players.filter(p => p.name !== data.name);
+      renderLobbyPlayers();
+      toast('🔔 ' + data.name + ' LEFT THE LOBBY');
+    }
+  }
+};
+
+function syncLobby() {
+  if (state.isHost) {
+    multiChannel.postMessage({ type: 'LOBBY_INFO', data: {
+      code: state.lobbyCode,
+      spice: state.spice,
+      cookTime: state.cookTimeMin,
+      players: lobbyState.players
+    }});
+  }
+}
+
+// ─── MULTIPLAYER ──────────────────────────────────────────────
+function createLobby() {
+  state.lobbyCode = randomCode();
+  state.isHost = true;
+  state.isReady = true;
+  const myName = state.user ? state.user.name : state.guestName;
+  lobbyState.players = [{ name: myName, host: true, ready: true }];
+  setupLobby();
+  showPage('lobby');
+  toast('LOBBY CREATED: ' + state.lobbyCode);
+}
+
+function joinLobby() {
+  const code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  if (code.length < 4) { toast('ENTER A VALID LOBBY CODE'); return; }
+  state.lobbyCode = code;
+  state.isHost = false;
+  state.isReady = true;
+  const myName = state.user ? state.user.name : state.guestName;
+  lobbyState.players = [{ name: myName, host: false, ready: true }];
+  
+  setupLobby();
+  showPage('lobby');
+  
+  multiChannel.postMessage({ type: 'PLAYER_JOINED', data: { code, user: { name: myName } } });
+  multiChannel.postMessage({ type: 'LOBBY_QUERY', data: { code } });
+  
+  toast('JOINING LOBBY: ' + code);
+}
+
+function randomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length: 6}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+
+function setupLobby() {
+  document.getElementById('lobby-code-display').textContent = state.lobbyCode;
+  updateLobbyMeta();
+
+  const hc = document.getElementById('host-controls');
+  hc.style.display = state.isHost ? 'block' : 'none';
+
+  renderLobbyPlayers();
+}
+
+function updateLobbyMeta() {
+  document.getElementById('lm-spice').textContent = state.spice.toFixed(1);
+  document.getElementById('lm-min').textContent = 2;
+  document.getElementById('lm-time').textContent = state.cookTimeMin;
+}
+
+function renderLobbyPlayers() {
+  const list = document.getElementById('lobby-players-list');
+  list.innerHTML = lobbyState.players.map(p => `
+    <div class="player-row">
+      <span class="player-name">
+        ${p.name}
+        ${p.host ? '<span class="player-tag red">HOST</span>' : '<span class="player-tag">PLAYER</span>'}
+      </span>
+      <span class="player-status ${p.ready ? 'status-ready' : 'status-waiting'}">
+        ${p.ready ? '✓ READY' : 'WAITING...'}
+      </span>
+    </div>
+  `).join('');
+}
+
+// toggleReady removed as game starts automatically
+
+function updateCookTime(v) {
+  state.cookTimeMin = parseInt(v);
+  document.getElementById('lm-time').textContent = v;
+}
+
+function copyLobbyCode() {
+  navigator.clipboard?.writeText(state.lobbyCode).catch(() => {});
+  toast('📋 CODE COPIED: ' + state.lobbyCode);
+}
+
+function leaveLobby() {
+  lobbyState.active = false;
+  if (state.lobbyCode) {
+    multiChannel.postMessage({ type: 'PLAYER_LEFT', data: { 
+      code: state.lobbyCode, 
+      name: state.user.name 
+    }});
+  }
+  clearInterval(state.cookTimerInterval);
+  showPage('multi');
+}
+
+// ─── COOK PHASE ───────────────────────────────────────────────
+function startCookPhase() {
+  if (lobbyState.active) return;
+  lobbyState.active = true;
+  
+  state.cookKit = KIT_SLOTS.map(name => ({ 
+    name, 
+    sample: getRandomSample(name),
+    waveData: Math.random() 
+  }));
+  state.cookTimeLeft = state.cookTimeMin * 60;
+  renderCookKit();
+  updateTimerDisplay();
+  showPage('cook');
+
+  clearInterval(state.cookTimerInterval);
+  state.cookTimerInterval = setInterval(() => {
+    state.cookTimeLeft--;
+    updateTimerDisplay();
+    if (state.cookTimeLeft <= 30) playTickSound();
+    if (state.cookTimeLeft <= 0) {
+      clearInterval(state.cookTimerInterval);
+      toast('⏰ TIME IS UP!');
+      setTimeout(() => startVotingPhase(), 1500);
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const m = Math.floor(state.cookTimeLeft / 60);
+  const s = state.cookTimeLeft % 60;
+  const disp = document.getElementById('timer-display');
+  disp.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  disp.classList.toggle('urgent', state.cookTimeLeft <= 60);
+}
+
+function renderCookKit() {
+  const grid = document.getElementById('cook-kit-grid');
+  grid.innerHTML = '';
+  state.cookKit.forEach((slot, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'kit-cell';
+    cell.id = 'cook-cell-' + i;
+    cell.innerHTML = `
+      <div class="cell-name">${slot.name} ${slot.sample ? '<span style="color:var(--red);opacity:0.6;">SAMPLED</span>' : ''}</div>
+      <div class="cell-num">${i + 1}</div>
+      <canvas class="waveform-canvas" id="wf-cook-${i}" width="200" height="48"></canvas>
+      <div class="play-icon" onclick="playCellSound(${i},'cook')">▶</div>
+    `;
+    cell.onclick = (e) => { e.stopPropagation(); playCellSound(i, 'cook'); };
+    grid.appendChild(cell);
+    setTimeout(() => {
+      const c = document.getElementById('wf-cook-' + i);
+      if (c) drawWaveform(c, state.spice);
+    }, 50);
+  });
+}
+
+function downloadKit() {
+  const name = state.user ? state.user.name : 'GUEST';
+  downloadKitAsZip(state.cookKit, `BATTLE_KIT_${state.lobbyCode || 'LOCAL'}_${name}.zip`);
+}
+
+function finishCook() {
+  clearInterval(state.cookTimerInterval);
+  toast('✓ MARKED AS FINISHED');
+  setTimeout(() => startVotingPhase(), 1000);
+}
+
+// ─── VOTING PHASE ─────────────────────────────────────────────
+function startVotingPhase() {
+  state.votingBeats = lobbyState.players.map(p => ({
+    name: p.name,
+    label: 'Beat'
+  }));
+  state.currentVotingIdx = 0;
+  state.votes = {};
+  state.votingBeats.forEach(b => state.votes[b.name] = 0);
+  state.myVote = null;
+  renderVotingBeat();
+  showPage('voting');
+}
+
+function renderVotingBeat() {
+  const beat = state.votingBeats[state.currentVotingIdx];
+  if (!beat) {
+    showResults();
+    return;
+  }
+
+  document.getElementById('voting-producer').textContent = beat.name + ' — ' + beat.label;
+  document.getElementById('vote-beat-count').textContent =
+    (state.currentVotingIdx + 1) + ' / ' + state.votingBeats.length;
+
+  const wf = document.getElementById('voting-waveform');
+  drawAnimatedWaveform(wf, 0);
+  state.votingProgress = 0;
+
+  // Vote buttons
+  const vb = document.getElementById('vote-btns');
+  vb.innerHTML = state.votingBeats.map(b => `
+    <button class="vote-btn" id="vbtn-${b.name}" onclick="castVote('${b.name}')">${b.name}</button>
+  `).join('');
+
+  document.getElementById('next-beat-row').style.display = 'none';
+}
+
+function startVotingProgress() {
+  clearInterval(state.progressInterval);
+  state.votingProgress = 0;
+  const fill = document.getElementById('vote-progress');
+  const wf = document.getElementById('voting-waveform');
+
+  state.progressInterval = setInterval(() => {
+    state.votingProgress = Math.min(state.votingProgress + 0.004, 1);
+    if (fill) fill.style.width = (state.votingProgress * 100) + '%';
+    if (wf) drawAnimatedWaveform(wf, state.votingProgress);
+
+    if (state.votingProgress >= 1) {
+      clearInterval(state.progressInterval);
+      document.getElementById('next-beat-row').style.display = 'block';
+    }
+  }, 50);
+}
+
+function castVote(playerName) {
+  if (state.myVote) { toast('YOU ALREADY VOTED THIS ROUND'); return; }
+  state.myVote = playerName;
+  state.votes[playerName] = (state.votes[playerName] || 0) + 1;
+  
+  multiChannel.postMessage({ type: 'VOTE_CAST', data: { 
+    code: state.lobbyCode, 
+    target: playerName 
+  }});
+
+  document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('voted'));
+  const vb = document.getElementById('vbtn-' + playerName);
+  if (vb) vb.classList.add('voted');
+  toast('✓ VOTE CAST FOR ' + playerName);
+  document.getElementById('next-beat-row').style.display = 'block';
+}
+
+function nextVotingBeat() {
+  state.currentVotingIdx++;
+  state.myVote = null;
+  if (state.currentVotingIdx >= state.votingBeats.length) {
+    clearInterval(state.progressInterval);
+    showResults();
+  } else {
+    renderVotingBeat();
+    startVotingProgress();
+  }
+}
+
+// ─── RESULTS ──────────────────────────────────────────────────
+function showResults() {
+  const sorted = Object.entries(state.votes)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, votes]) => ({ name, votes }));
+
+  // Award win
+  if (sorted[0] && sorted[0].name === state.user.name) {
+    state.user.wins = (state.user.wins || 0) + 1;
+    state.user.streak = (state.user.streak || 0) + 1;
+    players[state.user.name] = state.user;
+    localStorage.setItem('bb_players', JSON.stringify(players));
+    localStorage.setItem('bb_session', JSON.stringify(state.user));
+    document.getElementById('nav-wins').textContent = state.user.wins + ' WINS';
+    toast('🏆 YOU WIN THIS ROUND!');
+  } else {
+    state.user.streak = 0;
+  }
+  state.user.games = (state.user.games || 0) + 1;
+  players[state.user.name] = state.user;
+  localStorage.setItem('bb_players', JSON.stringify(players));
+
+  // Render podium
+  const podiumEl = document.getElementById('results-podium');
+  const trophies = ['🥇', '🥈', '🥉'];
+  const heights = ['first', 'second', 'third'];
+  const order = sorted.length >= 2 ? [sorted[1], sorted[0], sorted[2] || null].filter(Boolean) : sorted;
+
+  podiumEl.innerHTML = order.map((p, i) => {
+    const realRank = sorted.findIndex(x => x.name === p.name) + 1;
+    const cls = heights[realRank - 1] || 'third';
+    return `
+      <div class="podium-item">
+        <div class="podium-rank">#${realRank}</div>
+        <div class="podium-name">${p.name}</div>
+        <div class="podium-votes">${p.votes} VOTES</div>
+        <div class="podium-bar ${cls}">
+          <span class="podium-trophy">${trophies[realRank-1] || ''}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Render list
+  const list = document.getElementById('results-list');
+  list.innerHTML = sorted.map((p, i) => `
+    <div class="result-row">
+      <span class="result-pos">#${i+1}</span>
+      <span class="result-name ${p.name === state.user.name ? 'red' : ''}">${p.name}${p.name === state.user.name ? ' ← YOU' : ''}</span>
+      <span class="result-votes">${p.votes} VOTES</span>
+    </div>
+  `).join('');
+
+  showPage('results');
+}
+
+function playAgain() {
+  lobbyState.active = false;
+  showPage('home');
+}
+
+// ─── LEADERBOARD ──────────────────────────────────────────────
+function renderLeaderboard() {
+  // Only use real players from localStorage
+  const allPlayers = Object.values(players).map(p => ({
+    name: p.name,
+    wins: p.wins || 0,
+    games: p.games || 0,
+    streak: p.streak || 0
+  }));
+
+  allPlayers.sort((a, b) => b.wins - a.wins);
+
+  const tbody = document.getElementById('lb-body');
+  tbody.innerHTML = allPlayers.map((p, i) => {
+    const wr = p.games > 0 ? Math.round((p.wins / p.games) * 100) : 0;
+    const isMe = state.user && p.name === state.user.name;
+    const rankClass = i === 0 ? 'lb-rank-1' : i === 1 ? 'lb-rank-2' : i === 2 ? 'lb-rank-3' : '';
+    return `
+      <tr class="${rankClass} ${isMe ? 'lb-you' : ''}">
+        <td>${i + 1 === 1 ? '🥇' : i + 1 === 2 ? '🥈' : i + 1 === 3 ? '🥉' : i + 1}</td>
+        <td class="lb-name">${p.name}${isMe ? ' <span style="color:var(--red);font-size:6px;">YOU</span>' : ''}</td>
+        <td class="lb-wins">${p.wins}</td>
+        <td class="lb-games">${p.games}</td>
+        <td class="lb-wr">${wr}%</td>
+        <td style="color:${p.streak >= 3 ? '#ffd700' : 'var(--text-dim)'}">${p.streak > 0 ? '🔥'.repeat(Math.min(p.streak, 5)) : '—'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterLB(btn, mode) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeaderboard(); // In real app would filter by timeframe
+  toast('SHOWING: ' + mode.toUpperCase() + ' LEADERBOARD');
+}
+
+// ─── TOAST ────────────────────────────────────────────────────
+function toast(msg) {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  container.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── KEYBOARD SHORTCUTS ───────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (state.currentPage === 'solo') {
+    const num = parseInt(e.key);
+    if (num >= 1 && num <= 9) playCellSound(num - 1, 'solo');
+    if (e.key === 'r' || e.key === 'R') regenerateSoloKit();
+  }
+  if (state.currentPage === 'cook') {
+    const num = parseInt(e.key);
+    if (num >= 1 && num <= 9) playCellSound(num - 1, 'cook');
+  }
+  if (state.currentPage === 'login') {
+    if (e.key === 'Enter') {
+      const lf = document.getElementById('login-form');
+      if (lf.style.display !== 'none') doLogin();
+      else doRegister();
+    }
+  }
+});
+</script>
+</body>
+</html>
